@@ -1,0 +1,102 @@
+- name: Instalar y configurar Apache en web-node
+  hosts: web
+  become: true
+  tasks:
+    - name: Actualizar cache de apt e instalar apache2
+      apt:
+        name: apache2
+        state: present
+        update_cache: yes
+
+    - name: Asegurar que apache está iniciado y habilitado
+      systemd:
+        name: apache2
+        state: started
+        enabled: yes
+
+    - name: Desplegar página de bienvenida personalizada
+      copy:
+        dest: /var/www/html/index.html
+        content: |
+            <!doctype html>
+            <html lang="es">
+            <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Parcial #2 — Infraestructura como Código</title>
+            <style>
+                body {
+                margin: 0;
+                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+                background: linear-gradient(135deg, #0d1117, #161b22);
+                color: #e6edf3;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+                text-align: center;
+                }
+                h1 {
+                font-size: 2.5rem;
+                margin-bottom: 0.5rem;
+                color: #58a6ff;
+                }
+                h2 {
+                font-size: 1.3rem;
+                font-weight: normal;
+                margin-bottom: 1.5rem;
+                color: #a6b1bb;
+                }
+                p {
+                max-width: 600px;
+                margin: 0 auto 2rem;
+                font-size: 1rem;
+                color: #c9d1d9;
+                }
+                .authors {
+                display: flex;
+                flex-direction: column;
+                gap: 0.5rem;
+                margin-bottom: 2rem;
+                }
+                .author {
+                background: #21262d;
+                padding: 0.8rem 1.2rem;
+                border-radius: 8px;
+                color: #e6edf3;
+                font-weight: bold;
+                }
+                footer {
+                font-size: 0.8rem;
+                color: #8b949e;
+                margin-top: 2rem;
+                }
+            </style>
+            </head>
+            <body>
+            <main>
+                <h1>Parcial #2</h1>
+                <h2>Terraform · Ansible · Vagrant</h2>
+                <p>
+                Este proyecto demuestra el despliegue automatizado de infraestructura usando
+                <strong>Vagrant</strong> para la creación de máquinas, <strong>Terraform</strong> para la definición del inventario
+                y <strong>Ansible</strong> para la configuración de servicios.
+                </p>
+
+                <div class="authors">
+                <div class="author">👨‍💻 Andres Higuera Lozano</div>
+                <div class="author">👨‍💻 Nicolás Gonzales Franco</div>
+                </div>
+
+                <footer>
+                Computación en la Nube · Universidad · 2025
+                </footer>
+            </main>
+            </body>
+            </html>
+
+
+        owner: www-data
+        group: www-data
+        mode: '0644'
