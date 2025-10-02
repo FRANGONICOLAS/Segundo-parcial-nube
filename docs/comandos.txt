@@ -1,0 +1,83 @@
+for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do sudo apt-get remove $pkg; done
+
+sudo apt-get update
+sudo apt-get install ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt-get update
+
+sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+sudo usermod -aG docker $USER ##salir del ssh y volver a entrar
+
+curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+sudo install minikube-linux-amd64 /usr/local/bin/minikube
+
+sudo apt-get update
+sudo apt-get install -y apt-transport-https ca-certificates curl
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+sudo apt-get update
+sudo apt-get install -y kubectl
+
+
+
+INICIALIZAR LOS NODOS
+
+minikube start --nodes 2 -p multinode-demo
+
+REVISAR CON:
+
+kubectl get nodes
+
+INGRESAR A LA CARPETA NGINX
+
+cd nginx/
+kubectl apply -f web-deployment.yaml
+kubectl apply -f web-service.yaml
+
+kubectl get pods -o wide
+
+
+INGRESAR A STORE
+
+cd ../store/
+kubectl apply -f ingress-store.yaml
+kubectl apply -f store-minikube.yaml
+
+REVISAR PODS
+
+kubectl get pods
+
+ACTIVAR INGRESS
+
+minikube --profile=multinode-demo addons enable ingress
+
+
+PRUEBAS
+
+curl --resolve "store.local:80:192.168.49.2" -i http://store.local
+
+curl http://192.168.49.2:30081/
+
+curl http://192.168.49.2:30090
+
+kubectl run curl --rm -it --image=curlimages/curl --restart=Never -- http://order-service:3000/health
+
+kubectl run curl --rm -it --image=curlimages/curl --restart=Never -- http://product-service:3002/health
+
+curl http://192.168.49.2:30080
+
+
+
+
+
+
+
+
